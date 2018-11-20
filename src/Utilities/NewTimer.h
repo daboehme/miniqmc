@@ -127,6 +127,10 @@
 #include <ittnotify.h>
 #endif
 
+#ifdef USE_CALIPER
+#include <caliper/cali.h>
+#endif
+
 #define USE_STACK_TIMERS
 
 class Communicate;
@@ -241,9 +245,15 @@ public:
 #ifdef USE_VTUNE_TASKS
   __itt_domain* task_domain;
 #endif
-
+#ifdef USE_CALIPER
+    cali::Annotation caliper_ann;
+#endif
+    
   TimerManagerClass()
       : timer_threshold(timer_level_coarse), max_timer_id(1), max_timers_exceeded(false)
+#ifdef USE_CALIPER
+      , caliper_ann("QMCPACK", CALI_ATTR_NESTED)
+#endif
   {
 #ifdef USE_VTUNE_TASKS
     task_domain = __itt_domain_create("QMCPACK");
@@ -358,7 +368,11 @@ public:
       __itt_id parent_task = __itt_null;
       __itt_task_begin(manager->task_domain, __itt_null, parent_task, task_name);
 #endif
-
+      
+#ifdef USE_CALIPER
+      manager->caliper_ann.begin(name.c_str());
+#endif
+          
 #ifdef USE_STACK_TIMERS
       #pragma omp master
       {
@@ -399,6 +413,10 @@ public:
 
 #ifdef USE_VTUNE_TASKS
       __itt_task_end(manager->task_domain);
+#endif
+
+#ifdef USE_CALIPER
+      manager->caliper_ann.end();
 #endif
 
 #ifdef USE_STACK_TIMERS

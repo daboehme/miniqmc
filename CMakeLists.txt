@@ -475,6 +475,30 @@ IF (USE_VTUNE_TASKS)
   LINK_LIBRARIES(ittnotify)
 ENDIF()
 
+# To enable Caliper support, add
+#
+# -DQMC_USE_CALIPER \
+# -Dcaliper_DIR=<path-to-caliper-install-dir>/share/cmake/caliper
+#
+
+option(QMC_USE_CALIPER "Enable Caliper support" FALSE)
+
+IF (QMC_USE_CALIPER)
+  find_package(caliper)
+
+  if (caliper_FOUND)
+    set(USE_CALIPER TRUE)
+    INCLUDE_DIRECTORIES(${caliper_INCLUDE_DIR})
+    LINK_LIBRARIES(caliper)
+
+    if (HAVE_MPI)
+      LINK_LIBRARIES(caliper-mpi)
+    endif()
+
+    MESSAGE(STATUS "Caliper is enabled, using ${caliper_LIB_DIR}")
+  endif()
+ENDIF()
+
 ###############################################################
 # for specific linker in the case of profiling like hpctoolkit.
 ###############################################################
